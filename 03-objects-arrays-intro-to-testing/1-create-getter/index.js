@@ -9,8 +9,12 @@ export function createGetter(path) {
 	return function (obj) {
 		let value = obj;
 		for (const field of fields) {
-			value = value[field];
-			if (!value) {
+
+			if (value && value.hasOwnProperty(field)) {
+
+				value = value[field];
+			}
+			else {
 				return;
 			}
 		}
