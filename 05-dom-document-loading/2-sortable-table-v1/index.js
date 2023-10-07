@@ -1,5 +1,7 @@
 export default class SortableTable {
 	constructor(headerConfig = [], data = []) {
+		this.fieldValue = '';
+		this.orderValue = '';
 		this.headerConfig = headerConfig;
 		this.data = data;
 		this.element = this.createTableTemplate();
@@ -17,21 +19,27 @@ export default class SortableTable {
 		return divHeaderRow;
 	}
 	createHeaderCell(objCell) {
+
 		this.odjCell = objCell;
+
 		const divHeaderCell = document.createElement('div');
 
 		divHeaderCell.setAttribute('class', 'sortable-table__cell');
 		divHeaderCell.setAttribute('data-id', this.odjCell.id);
 		divHeaderCell.setAttribute('data-sortable', this.odjCell.sortable);
-		//		divHeaderCell.setAttribute('data-order', this.odjCell.sortType);
 
-		divHeaderCell.innerHTML = `
-				<span>${this.odjCell.title}</span>
-				${this.odjCell.sortable ?
-				`<span data-element="arrow" class="sortable-table__sort-arrow">
-						<span class="sort-arrow"></span>
-					</span>`: ''}
-		`;
+		divHeaderCell.append(document.createElement('span').innerText = this.odjCell.title);
+
+		if (this.odjCell.id === this.fieldValue) {
+			divHeaderCell.setAttribute('data-order', this.orderValue);
+			const sortArrow = document.createElement('span');
+			sortArrow.className = 'sortable-table__sort-arrow';
+			sortArrow.dataset.element = 'arrow';
+			sortArrow.innerHTML = '<span class="sort-arrow"></span>';
+
+			divHeaderCell.append(sortArrow);
+		}
+
 		return divHeaderCell;
 	}
 	createBodyTable(dataObj) {
@@ -59,7 +67,9 @@ export default class SortableTable {
 		return divRowTable;
 	}
 	createCellTable(cellObj) {
+		
 		this.cellObj = cellObj;
+
 		const divCellTable = document.createElement('div');
 
 		divCellTable.setAttribute('class', 'sortable-table__cell');
@@ -68,7 +78,7 @@ export default class SortableTable {
 			divCellTable.append(this.createImageSrc(this.cellObj));
 		}
 		else {
-			divCellTable.innerHTML = this.cellObj;
+			divCellTable.innerHTML=this.cellObj;
 		}
 		return divCellTable;
 	}
@@ -104,6 +114,7 @@ export default class SortableTable {
 		return divLEmptyPlaceholder;
 	}
 	createTableTemplate() {
+
 		const divProductsList = document.createElement('div');
 
 		divProductsList.setAttribute('class', 'products-list__container');
@@ -128,6 +139,7 @@ export default class SortableTable {
 
 		this.fieldValue = fieldValue;
 		this.orderValue = orderValue;
+
 		const findSortTypeById = (array, id) => {
 			const item = array.find(obj => obj.id === id);
 			return item ? item.sortType : null;
@@ -152,10 +164,15 @@ export default class SortableTable {
 			}
 		}
 
-		const sortedBodyTable = document.querySelector('.sortable-table__body');
-		sortedBodyTable.replaceWith(this.createBodyTable(this.data));
-
+		
+		return this.updateTable();
+		
 	}
+	updateTable() {
+		const newTableElement = this.createTableTemplate();
+		this.element.replaceWith(newTableElement);
+		this.element = newTableElement;
+	  }
 	remove() {
 		this.element.remove();
 	}
@@ -163,4 +180,3 @@ export default class SortableTable {
 		this.remove();
 	}
 }
-
