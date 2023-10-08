@@ -1,11 +1,8 @@
 export default class SortableTable {
 	constructor(headerConfig = [], data = []) {
-		this.fieldValue = '';
-		this.orderValue = '';
 		this.headerConfig = headerConfig;
 		this.data = data;
 		this.render();
-
 	}
 
 	createHeaderRow() {
