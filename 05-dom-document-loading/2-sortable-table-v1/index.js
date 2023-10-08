@@ -4,7 +4,8 @@ export default class SortableTable {
 		this.orderValue = '';
 		this.headerConfig = headerConfig;
 		this.data = data;
-		this.element = this.createTableTemplate();
+		this.render();
+
 	}
 
 	createHeaderRow() {
@@ -20,17 +21,17 @@ export default class SortableTable {
 	}
 	createHeaderCell(objCell) {
 
-		this.odjCell = objCell;
+		const headerCell = objCell;
 
 		const divHeaderCell = document.createElement('div');
 
 		divHeaderCell.setAttribute('class', 'sortable-table__cell');
-		divHeaderCell.setAttribute('data-id', this.odjCell.id);
-		divHeaderCell.setAttribute('data-sortable', this.odjCell.sortable);
+		divHeaderCell.setAttribute('data-id', headerCell.id);
+		divHeaderCell.setAttribute('data-sortable', headerCell.sortable);
 
-		divHeaderCell.append(document.createElement('span').innerText = this.odjCell.title);
+		divHeaderCell.append(document.createElement('span').innerText = headerCell.title);
 
-		if (this.odjCell.id === this.fieldValue) {
+		if (headerCell.id === this.fieldValue) {
 			divHeaderCell.setAttribute('data-order', this.orderValue);
 			const sortArrow = document.createElement('span');
 			sortArrow.className = 'sortable-table__sort-arrow';
@@ -43,52 +44,52 @@ export default class SortableTable {
 		return divHeaderCell;
 	}
 	createBodyTable(dataObj) {
-		this.dataObj = dataObj;
+		const bodyData = dataObj;
 		const divBodyTable = document.createElement('div');
 
 		divBodyTable.setAttribute('class', 'sortable-table__body');
 		divBodyTable.setAttribute('data-element', 'body');
 
-		for (let key in this.dataObj) {
-			divBodyTable.append(this.createRowTable(this.dataObj[key]));
+		for (let key in bodyData) {
+			divBodyTable.append(this.createRowTable(bodyData[key]));
 		}
 		return divBodyTable;
 	}
 	createRowTable(rowObj) {
-		this.rowObj = rowObj;
+		const rowData = rowObj;
 		const divRowTable = document.createElement('a');
 
 		divRowTable.setAttribute('class', 'sortable-table__row');
-		divRowTable.setAttribute('href', this.rowObj.id);
+		divRowTable.setAttribute('href', rowData.id);
 
 		for (let key in this.headerConfig) {
-			divRowTable.append(this.createCellTable(this.rowObj[this.headerConfig[key].id]));
+			divRowTable.append(this.createCellTable(rowData[this.headerConfig[key].id]));
 		}
 		return divRowTable;
 	}
 	createCellTable(cellObj) {
-		
-		this.cellObj = cellObj;
+
+		const cellData = cellObj;
 
 		const divCellTable = document.createElement('div');
 
 		divCellTable.setAttribute('class', 'sortable-table__cell');
 
-		if (typeof (this.cellObj) === 'object') {
-			divCellTable.append(this.createImageSrc(this.cellObj));
+		if (typeof (cellData) === 'object') {
+			divCellTable.append(this.createImageSrc(cellData));
 		}
 		else {
-			divCellTable.innerHTML=this.cellObj;
+			divCellTable.innerHTML = cellData;
 		}
 		return divCellTable;
 	}
 	createImageSrc(imageObj) {
-		this.ImageSrc = imageObj[0];
+		const imageData = imageObj[0];
 		const imageSrc = document.createElement('img');
 
 		imageSrc.setAttribute('class', 'sortable-table-image');
 		imageSrc.setAttribute('alt', 'Image');
-		imageSrc.setAttribute('src', this.ImageSrc.url);
+		imageSrc.setAttribute('src', imageData.url);
 
 		return imageSrc;
 	}
@@ -164,15 +165,27 @@ export default class SortableTable {
 			}
 		}
 
-		
-		return this.updateTable();
-		
+
+		return this.update();
+
 	}
-	updateTable() {
+	update() {
 		const newTableElement = this.createTableTemplate();
 		this.element.replaceWith(newTableElement);
 		this.element = newTableElement;
-	  }
+		this.subElements = {
+			body: this.element.querySelector('[data-element="body"]')
+		};
+	}
+	render() {
+
+		this.element = this.createTableTemplate();
+
+		this.subElements = {
+			body: this.element.querySelector('[data-element="body"]')
+		};
+	}
+
 	remove() {
 		this.element.remove();
 	}
