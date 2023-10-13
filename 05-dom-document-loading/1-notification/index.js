@@ -32,16 +32,18 @@ export default class NotificationMessage {
 		}
 		targetElement.append(this.element);
 		if (this.duration) {
-			this.hideTimeout = setTimeout(() => this.remove(), this.duration);
+			this.hideTimeoutId = setTimeout(() => this.remove(), this.duration);
 		}
 		NotificationMessage.currentMessage = this;
 	}
 	remove() {
-		clearTimeout(this.hideTimeout);
 		this.element.remove();
-		NotificationMessage.currentMessage = null;
 	}
 	destroy() {
 		this.remove();
+		if (this.hideTimeoutId) {
+			clearTimeout(this.hideTimeoutId);
+		}
+		this.hideTimeoutId = null;
 	}
 }
