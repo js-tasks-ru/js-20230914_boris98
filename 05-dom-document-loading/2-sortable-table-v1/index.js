@@ -1,192 +1,140 @@
 export default class SortableTable {
-	constructor(headerConfig = [], data = []) {
-		this.headerConfig = headerConfig;
-		this.data = data;
-		this.render();
-	}
+  element;
+  subElements = {};
 
-	createHeaderRow() {
-		const divHeaderRow = document.createElement('div');
+  constructor(headersConfig = [], data = []) {
+    this.headersConfig = headersConfig;
+    this.data = data;
 
-		divHeaderRow.setAttribute('class', 'sortable-table__header sortable-table__row');
-		divHeaderRow.setAttribute('data-element', 'header');
+    this.render();
+  }
 
-		for (let key in this.headerConfig) {
-			divHeaderRow.append(this.createHeaderCell(this.headerConfig[key]));
-		}
-		return divHeaderRow;
-	}
-	createHeaderCell(objCell) {
+  getTableHeader() {
+    return `<div data-element="header" class="sortable-table__header sortable-table__row">
+      ${this.headersConfig.map(item => this.getHeaderRow(item)).join('')}
+    </div>`;
+  }
 
-		const headerCell = objCell;
+  getHeaderRow({id, title, sortable}) {
+    return `
+      <div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}">
+        <span>${title}</span>
+        <span data-element="arrow" class="sortable-table__sort-arrow">
+          <span class="sort-arrow"></span>
+        </span>
+      </div>
+    `;
+  }
 
-		const divHeaderCell = document.createElement('div');
+  getTableBody() {
+    return `
+      <div data-element="body" class="sortable-table__body">
+        ${this.getTableRows(this.data)}
+      </div>`;
+  }
 
-		divHeaderCell.setAttribute('class', 'sortable-table__cell');
-		divHeaderCell.setAttribute('data-id', headerCell.id);
-		divHeaderCell.setAttribute('data-sortable', headerCell.sortable);
+  getTableRows(data) {
+    return data.map(item => {
+      return `
+        <a href="/products/${item.id}" class="sortable-table__row">
+          ${this.getTableRow(item)}
+        </a>`;
+    }).join('');
+  }
 
-		divHeaderCell.append(document.createElement('span').innerText = headerCell.title);
+  getTableRow(item) {
+    const cells = this.headersConfig.map(({id, template}) => {
+      return {
+        id,
+        template
+      };
+    });
 
-		if (headerCell.id === this.fieldValue) {
-			divHeaderCell.setAttribute('data-order', this.orderValue);
-			const sortArrow = document.createElement('span');
-			sortArrow.className = 'sortable-table__sort-arrow';
-			sortArrow.dataset.element = 'arrow';
-			sortArrow.innerHTML = '<span class="sort-arrow"></span>';
+    return cells.map(({id, template}) => {
+      return template
+        ? template(item[id])
+        : `<div class="sortable-table__cell">${item[id]}</div>`;
+    }).join('');
+  }
 
-			divHeaderCell.append(sortArrow);
-		}
+  getTable() {
+    return `
+      <div class="sortable-table">
+        ${this.getTableHeader()}
+        ${this.getTableBody()}
+      </div>`;
+  }
 
-		return divHeaderCell;
-	}
-	createBodyTable(dataObj) {
-		const bodyData = dataObj;
-		const divBodyTable = document.createElement('div');
+  render() {
+    const wrapper = document.createElement('div');
 
-		divBodyTable.setAttribute('class', 'sortable-table__body');
-		divBodyTable.setAttribute('data-element', 'body');
+    wrapper.innerHTML = this.getTable();
 
-		for (let key in bodyData) {
-			divBodyTable.append(this.createRowTable(bodyData[key]));
-		}
-		return divBodyTable;
-	}
-	createRowTable(rowObj) {
-		const rowData = rowObj;
-		const divRowTable = document.createElement('a');
+    const element = wrapper.firstElementChild;
 
-		divRowTable.setAttribute('class', 'sortable-table__row');
-		divRowTable.setAttribute('href', rowData.id);
+    this.element = element;
+    this.subElements = this.getSubElements(element);
+  }
 
-		for (let key in this.headerConfig) {
-			divRowTable.append(this.createCellTable(rowData[this.headerConfig[key].id]));
-		}
-		return divRowTable;
-	}
-	createCellTable(cellObj) {
+  sort(field, order) {
+    const sortedData = this.sortData(field, order);
+    const allColumns = this.element.querySelectorAll('.sortable-table__cell[data-id]');
+    const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id="${field}"]`);
 
-		const cellData = cellObj;
+    // NOTE: Remove sorting arrow from other columns
+    allColumns.forEach(column => {
+      column.dataset.order = '';
+    });
 
-		const divCellTable = document.createElement('div');
+    currentColumn.dataset.order = order;
 
-		divCellTable.setAttribute('class', 'sortable-table__cell');
+    this.subElements.body.innerHTML = this.getTableRows(sortedData);
+  }
 
-		if (typeof (cellData) === 'object') {
-			divCellTable.append(this.createImageSrc(cellData));
-		}
-		else {
-			divCellTable.innerHTML = cellData;
-		}
-		return divCellTable;
-	}
-	createImageSrc(imageObj) {
-		const imageData = imageObj[0];
-		const imageSrc = document.createElement('img');
+  sortData(field, order) {
+    const arr = [...this.data];
+    const column = this.headersConfig.find(item => item.id === field);
+    const { sortType } = column;
+    const directions = {
+      asc: 1,
+      desc: -1
+    };
+    const direction = directions[order];
 
-		imageSrc.setAttribute('class', 'sortable-table-image');
-		imageSrc.setAttribute('alt', 'Image');
-		imageSrc.setAttribute('src', imageData.url);
+    return arr.sort((a, b) => {
+      switch (sortType) {
+      case 'number':
+        return direction * (a[field] - b[field]);
+      case 'string':
+        return direction * a[field].localeCompare(b[field], ['ru', 'en']);
+      default:
+        return direction * (a[field] - b[field]);
+      }
+    });
+  }
 
-		return imageSrc;
-	}
-	createDivLoading() {
-		const divLoading = document.createElement('div');
+  getSubElements(element) {
+    const result = {};
+    const elements = element.querySelectorAll('[data-element]');
 
-		divLoading.setAttribute('class', 'loading-line sortable-table__loading-line');
+    for (const subElement of elements) {
+      const name = subElement.dataset.element;
 
-		return divLoading;
-	}
-	createDivEmptyPlaceholder() {
-		const divLEmptyPlaceholder = document.createElement('div');
+      result[name] = subElement;
+    }
 
-		divLEmptyPlaceholder.setAttribute('class', 'sortable-table__empty-placeholder');
-		divLEmptyPlaceholder.setAttribute('data-element', 'emptyPlaceholder');
+    return result;
+  }
 
-		divLEmptyPlaceholder.innerHTML = `
-				  <div>
-					<p>No products satisfies your filter criteria</p>
-					<button type="button" class="button-primary-outline">Reset all filters</button>
-				  </div>
-				`;
-		return divLEmptyPlaceholder;
-	}
-	createTableTemplate() {
+  remove () {
+    if (this.element) {
+      this.element.remove();
+    }
+  }
 
-		const divProductsList = document.createElement('div');
-
-		divProductsList.setAttribute('class', 'products-list__container');
-		divProductsList.setAttribute('data-element', 'productsContainer');
-
-		const divTable = document.createElement('div');
-
-		divTable.setAttribute('class', 'sortable-table');
-
-		divTable.append(this.createHeaderRow());
-		divTable.append(this.createBodyTable(this.data));
-		divTable.append(this.createDivLoading());
-		divTable.append(this.createDivEmptyPlaceholder());
-
-		divProductsList.append(divTable);
-
-		return divProductsList;
-
-	}
-
-	sort(fieldValue, orderValue) {
-
-		this.fieldValue = fieldValue;
-		this.orderValue = orderValue;
-
-		const findSortTypeById = (array, id) => {
-			const item = array.find(obj => obj.id === id);
-			return item ? item.sortType : null;
-		};
-
-		const sortType = findSortTypeById(this.headerConfig, this.fieldValue);
-
-		if (sortType === 'string') {
-			if (this.orderValue == 'asc') {
-				this.data.sort((a, b) => a[this.fieldValue].localeCompare(b[this.fieldValue], ['ru', 'en'], { caseFirst: 'upper' }));
-			}
-			else {
-				this.data.sort((a, b) => b[this.fieldValue].localeCompare(a[this.fieldValue], ['ru', 'en'], { caseFirst: 'upper' }));
-			}
-		} else {
-
-			if (this.orderValue == 'asc') {
-				this.data.sort((a, b) => a[this.fieldValue] - b[this.fieldValue]);
-			}
-			else {
-				this.data.sort((a, b) => b[this.fieldValue] - a[this.fieldValue]);
-			}
-		}
-
-
-		return this.update();
-
-	}
-	update() {
-		const newTableElement = this.createTableTemplate();
-		this.element.replaceWith(newTableElement);
-		this.element = newTableElement;
-		this.subElements = {
-			body: this.element.querySelector('[data-element="body"]')
-		};
-	}
-	render() {
-
-		this.element = this.createTableTemplate();
-
-		this.subElements = {
-			body: this.element.querySelector('[data-element="body"]')
-		};
-	}
-
-	remove() {
-		this.element.remove();
-	}
-	destroy() {
-		this.remove();
-	}
+  destroy() {
+    this.remove();
+    this.element = null;
+    this.subElements = {};
+  }
 }
