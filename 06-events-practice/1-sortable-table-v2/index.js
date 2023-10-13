@@ -8,21 +8,17 @@ export default class SortableTableExtended extends SortableTable {
 		super(headersConfig, data);
 		this.sorted = sorted;
 		this.sort(this.sorted.id, this.sorted.order);
-
 		this.addListener();
 	}
 	
 	addListener() {
 		const headerRowElement = this.element.querySelector('.sortable-table__header');
-
 		headerRowElement.addEventListener('pointerdown', this.onHeaderRowPointerDown);
-// on + object + event name
-
 	}
 	onHeaderRowPointerDown = (event) => {
 		const { id, sortable } = event.target.closest('.sortable-table__cell').dataset;
 		if (sortable === 'false') return;
-		const order = event.target.closest('.sortable-table__cell').dataset.order === 'asc' ? 'desc' : 'asc';
+		const order = event.target.closest('.sortable-table__cell').dataset.order === 'desc' ? 'asc' : 'desc';
 		this.sort(id, order);
 	}
 	removeListener() {
@@ -38,4 +34,3 @@ export default class SortableTableExtended extends SortableTable {
 		super.destroy();
 	}
 }
-
