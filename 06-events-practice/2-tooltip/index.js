@@ -19,24 +19,18 @@ class Tooltip {
 			}
 			const tooltipText = event.target.dataset.tooltip;
 			this.element.textContent = tooltipText;
-
 		}
 	}
 	onTooltipPointerMove = (event) => {
-		const tooltip = document.querySelector('.tooltip');
-		if (tooltip) {
-			tooltip.style.top = event.clientY + window.scrollY + 10 + 'px';
-			tooltip.style.left = event.clientX + 10 + 'px';
+		if (Tooltip.instance.element) {
+			Tooltip.instance.element.style.top = event.clientY + window.scrollY + 10 + 'px';
+			Tooltip.instance.element.style.left = event.clientX + 10 + 'px';
 		}
-
 	}
-
-
 	onTooltipPointerOut = (event) => {
 		if (event.target.hasAttribute('data-tooltip')) {
 			this.remove();
 		}
-
 	}
 	render() {
 		const wrapper = document.createElement('div');
